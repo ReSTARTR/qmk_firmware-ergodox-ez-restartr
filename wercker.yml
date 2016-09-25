@@ -2,6 +2,13 @@ box: golang
 
 build:
   steps:
+    - add-to-known_hosts:
+      hostname: github.com
+      fingerprint: 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48
+    - script:
+      name: ssh config
+      code: >
+        ssh -t git@github.com 2>&1 > /dev/null || true
     - script:
       name: go get glide
       code: >
@@ -27,5 +34,5 @@ build:
     - script:
       name: build original keymap
       code: >
-        qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr get &&
-        qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr build
+        qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr -owner=ReSTARTR get &&
+        qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr -owner=ReSTARTR build
