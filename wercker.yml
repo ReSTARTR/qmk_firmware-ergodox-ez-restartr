@@ -28,11 +28,15 @@ build:
         apt-get update &&
         sudo apt-get install -y gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
     - script:
-      name: build default keymap
-      code: >
-        qmkmk -keyboard=ergodox -subproject=ez -keymap=default build
-    - script:
       name: build original keymap
       code: >
         qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr -owner=ReSTARTR get &&
         qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr -owner=ReSTARTR build
+
+deploy:
+  steps:
+    - script:
+        name: put built hex file to bintray.
+        code: >
+          curl -T $(qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr config | jq -r '.|.hex_dir+"/"+.keymap.hex_file') -u$BINTRAY_USERNAME:$BINTRAY_APIKEY \
+            https://api.bintray.com/content/$BINTRAY_USERNAME/generic/ergodox.hex/$WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT/ergodox-ez-restartr.hex
