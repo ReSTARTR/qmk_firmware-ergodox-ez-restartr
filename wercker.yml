@@ -44,9 +44,8 @@ build:
       code: >
         cp $(which qmkmk) $WERCKER_OUTPUT_DIR/
 
-# deploy steps
-deploy:
-  steps:
+    # deploy:
+    #   steps:
     - script:
         name: put built hex file to bintray.
         code: >
