@@ -1,3 +1,4 @@
+# OS=debian
 box: golang
 
 build:
@@ -26,22 +27,30 @@ build:
       code: >
         qmkmk init &&
         apt-get update &&
-        sudo apt-get install -y gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+        apt-get install -y gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
     - script:
       name: build original keymap
       code: >
         qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr -owner=ReSTARTR get &&
         qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr -owner=ReSTARTR build
 
-    # deploy steps
     - script:
       name: init tool
       code: >
-        mkdir $HOME/bin &&
-        sudo wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -O $HOME/bin/jq &&
-        chmod +x $HOME/bin/jq
+        wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -O $WERCKER_OUTPUT_DIR/jq &&
+        chmod +x $WERCKER_OUTPUT_DIR/jq
+    - script:
+      name: copy binaries
+      code: >
+        cp $(which qmkmk) $WERCKER_OUTPUT_DIR/
+
+# deploy steps
+deploy:
+  steps:
     - script:
         name: put built hex file to bintray.
         code: >
-          curl -T $(qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr config | $HOME/bin/jq -r '.|.hex_dir+"/"+.keymap.hex_file') -u$BINTRAY_USERNAME:$BINTRAY_APIKEY \
-            https://api.bintray.com/content/$BINTRAY_USERNAME/generic/ergodox.hex/$WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT/ergodox-ez-restartr.hex
+          HEX_FILE="$($WERCKER_OUTPUT_DIR/qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr config | $WERCKER_OUTPUT_DIR/jq -r '.|.hex_dir+"/"+.keymap.hex_file')" &&
+          HEX_NAME="$($WERCKER_OUTPUT_DIR/qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr config | $WERCKER_OUTPUT_DIR/jq -r '.|.keymap.hex_file')" &&
+          curl -T $HEX_FILE -u$BINTRAY_USERNAME:$BINTRAY_APIKEY \
+            https://api.bintray.com/content/$BINTRAY_USERNAME/generic/ergodox.hex/$WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT/$HEX_NAME
