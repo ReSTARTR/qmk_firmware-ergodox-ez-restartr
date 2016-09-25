@@ -1,0 +1,31 @@
+box: golang
+
+build:
+  steps:
+    - script:
+      name: go get glide
+      code: >
+        go get github.com/Masterminds/glide &&
+        go install github.com/Masterminds/glide
+    - script:
+      name: go get qmkmk
+      code: >
+        go get github.com/ReSTARTR/qmkmk &&
+        cd $(go env GOPATH)/src/github.com/ReSTARTR/qmkmk &&
+        glide update &&
+        go install github.com/ReSTARTR/qmkmk
+    - script:
+      name: init tool
+      code: >
+        qmkmk init &&
+        apt-get update &&
+        sudo apt-get install -y gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+    - script:
+      name: build default keymap
+      code: >
+        qmkmk -keyboard=ergodox -subproject=ez -keymap=default build
+    - script:
+      name: build original keymap
+      code: >
+        qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr get &&
+        qmkmk -keyboard=ergodox -subproject=ez -keymap=restartr build
